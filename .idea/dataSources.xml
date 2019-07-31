@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourceManagerImpl" format="xml" multifile-model="true">
+    <data-source source="LOCAL" name="PostgreSQL - PUP_P@10.11.34.21" uuid="d906a9bf-48e0-48f6-bc81-fe952d347bb2">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://10.11.34.21:5432/PUP_P</jdbc-url>
+    </data-source>
+    <data-source source="LOCAL" name="PostgreSQL - ASKM@10.11.34.21" uuid="6a7dd632-4f6b-46e2-8960-0e61d7aec6db">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://10.11.34.21:5432/ASKM</jdbc-url>
+    </data-source>
+    <data-source source="LOCAL" name="geodata@localhost" uuid="51a26565-521c-485f-91f4-75e36527411a">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://localhost:5432/geodata</jdbc-url>
+    </data-source>
+    <data-source source="LOCAL" name="ASKM_DS" uuid="2dec53da-fb8d-4035-98ff-8e0f244a48ed">
+      <driver-ref>postgresql</driver-ref>
+      <synchronize>true</synchronize>
+      <jdbc-driver>org.postgresql.Driver</jdbc-driver>
+      <jdbc-url>jdbc:postgresql://10.11.34.21:5432/ASKM</jdbc-url>
+    </data-source>
+  </component>
+</project>

@@ -1,0 +1,14 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="geocoderweb:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <properties id="maven-jee-properties">
+      <options>
+        <module>geocoderweb</module>
+        <packaging>war</packaging>
+      </options>
+    </properties>
+    <root id="archive" name="geocoderweb-1.0-SNAPSHOT.war">
+      <element id="artifact" artifact-name="geocoderweb:war exploded" />
+    </root>
+  </artifact>
+</component>

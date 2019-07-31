@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+    <title>Информационные объекты типа 'Маршрут'</title>
+</h:head>
+<h:body>
+    <h:form>
+        <f:metadata>
+            <f:viewAction action="#{routesView.onLoad()}" />
+        </f:metadata>
+        <p:dataTable value="#{routesView.routesInfo}" var="rec" selection="#{routesView.selection}" rows="5" scrollable="true" scrollWidth="1920"
+                     widgetVar="datatable"
+                     resizableColumns="true" style="margin-bottom:20px"
+                     paginator="true"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     paginatorPosition="top"
+                     rowsPerPageTemplate="5,10,15"
+                     rowKey="#{rec.REGISTERED_NAME}"
+                     filteredValue="#{routesView.filteredRoutes}"
+                     lazy="false">
+            <f:facet name="header">
+                Информационные объекты типа 'Маршрут'
+            </f:facet>
+            <p:column selectionMode="multiple" style="width:16px;text-align:center"/>
+            <p:column headerText="Необходимо отправить в КИАССК">
+                <h:outputText value="#{routesView.getStatus(rec) ? 'Да' : 'Нет'}" />
+            </p:column>
+            <p:column filterBy="#{rec.REGISTERED_NAME}" headerText="Регистрационный номер маршрута" filterMatchMode="contains">
+                <h:outputText value="#{rec.REGISTERED_NAME}" />
+            </p:column>
+            <p:column filterBy="#{rec.NAME}" headerText="Наименование маршрута" filterMatchMode="contains">
+                <h:outputText value="#{rec.NAME}" />
+            </p:column>
+            <p:column filterBy="#{rec.ACTUAL_FROM}" headerText="Дата начала осуществления перевозок" filterMatchMode="contains">
+                <h:outputText value="#{rec.ACTUAL_FROM}" />
+            </p:column>
+            <p:column filterBy="#{rec.ACTUAL_TO}" headerText="Дата прекращения перевозок по маршруту" filterMatchMode="contains">
+                <h:outputText value="#{rec.ACTUAL_TO}" />
+            </p:column>
+        </p:dataTable>
+        <br/>
+        <h:commandButton value="Отправить все недостающие данные в КИАССК" action="#{routesView.sendAll()}"
+                         ajax="true" immediate="false"/>
+        <br/>
+        <h:commandButton value="Отправить выбранные данные в КИАССК" action="#{routesView.sendJson()}"
+                         ajax="true" immediate="false"/>
+    </h:form>
+</h:body>
+</html>
