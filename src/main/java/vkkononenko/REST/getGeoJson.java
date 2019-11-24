@@ -2,7 +2,6 @@ package vkkononenko.REST;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import vkkononenko.models.Stop;
-import vkkononenko.models.UnregisteredStop;
 import vkkononenko.models.YandexMapsAPI.PointsJSON;
 import javax.enterprise.context.RequestScoped;
 import javax.persistence.EntityManager;
@@ -40,10 +39,6 @@ public class getGeoJson
                 Stop stop = em.find(Stop.class, stopId);
                 PointsJSON json = new PointsJSON(stop);
                 result =  mapper.writeValueAsString(json);
-            } else {
-                UnregisteredStop stop = em.find(UnregisteredStop.class, stopId);
-                //PointsJSON pointsJSON = new PointsJSON(stop, resultId);
-                //result =  mapper.writeValueAsString(pointsJSON);
             }
             log.info(result);
             return result;

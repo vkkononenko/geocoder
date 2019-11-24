@@ -43,17 +43,15 @@ public class GeoCodeUtils implements Serializable {
         try{
             stop = renameStop(stop);
 
-            String regionCode = stop.getRegNum().trim().substring(0, 2);
-
             log.info("Геокодируется остановочный пункт: " + stop.getName());
 
-            String replace = stop.getName().trim().replace(" ", "+").replaceAll("\"", "");
+            String replace = stop.getAdress().trim().replace(" ", "+").replaceAll("\"", "");
 
-            result = geoCodeYandex(replace, regionCode);
+            result = geoCodeYandex(replace);
 
             if(result == null){
                 replace = stop.getPlace().trim().replace(",", "").replace(" ", "+").replace("-", "").replace("«", "");
-                result = geoCodeYandex(replace, regionCode);
+                result = geoCodeYandex(replace);
                 stop.getCoords().add(result);
             } else {
                 stop.getCoords().add(result);
@@ -62,51 +60,16 @@ public class GeoCodeUtils implements Serializable {
                 log.info("Результат записан в базу: ".concat(stop.getName()));
                 stop.setRequest(replace);
 
-                int index = 0;
-                Double maxDistance = 0D;
-
-                if(stop.getCoords().get(0).getGeoCodingObjects().stream().anyMatch(g -> g.getType().equals("area"))) {
-                    stop.getCoords().get(0).setGeoCodingObjects(stop.getCoords().get(0).getGeoCodingObjects().stream().filter(g -> g.getType().equals("area")).collect(Collectors.toList()));
-                }
-
-                if(stop.getCoords().get(0).getGeoCodingObjects().stream().anyMatch(g -> g.getType().equals("locality"))) {
-                    stop.getCoords().get(0).setGeoCodingObjects(stop.getCoords().get(0).getGeoCodingObjects().stream().filter(g -> g.getType().equals("locality")).collect(Collectors.toList()));
-                }
-
-                if(stop.getCoords().get(0).getGeoCodingObjects().stream().anyMatch(g -> g.getType().equals("district"))) {
-                    stop.getCoords().get(0).setGeoCodingObjects(stop.getCoords().get(0).getGeoCodingObjects().stream().filter(g -> g.getType().equals("district")).collect(Collectors.toList()));
-                }
-
-                if(stop.getCoords().get(0).getGeoCodingObjects().stream().anyMatch(g -> g.getType().equals("street"))) {
-                    stop.getCoords().get(0).setGeoCodingObjects(stop.getCoords().get(0).getGeoCodingObjects().stream().filter(g -> g.getType().equals("street")).collect(Collectors.toList()));
-                }
-
-                if(stop.getCoords().get(0).getGeoCodingObjects().stream().anyMatch(g -> g.getType().equals("house"))) {
-                    stop.getCoords().get(0).setGeoCodingObjects(stop.getCoords().get(0).getGeoCodingObjects().stream().filter(g -> g.getType().equals("house")).collect(Collectors.toList()));
-                }
-
-
-                if(stop.getCoords().get(0).getGeoCodingObjects().size() > 0) {
-                    for (int i = 0; i < stop.getCoords().get(0).getGeoCodingObjects().size(); i++) {
-                        for (int j = 0; j < stop.getCoords().get(0).getGeoCodingObjects().size(); j++) {
-                            Double distance = GetDistance(stop.getCoords().get(0).getGeoCodingObjects().get(i).getLat(), stop.getCoords().get(0).getGeoCodingObjects().get(i).getLon(),
-                                    stop.getCoords().get(0).getGeoCodingObjects().get(j).getLat(), stop.getCoords().get(0).getGeoCodingObjects().get(j).getLon());
-                            if (maxDistance < distance) {
-                                maxDistance = distance;
-                            }
-                        }
-                    }
-                }
-
-                index = 0;
                 stop.setCount((long) stop.getCoords().get(0).getGeoCodingObjects().size());
-                stop.setMaxDistance(maxDistance == 0 ? null : maxDistance);
                 stop.setLat(stop.getCoords().get(0).getGeoCodingObjects().get(0).getLat());
                 stop.setLon(stop.getCoords().get(0).getGeoCodingObjects().get(0).getLon());
                 stop.setAdress(ReverseGeoCodingResultYandex(stop.getCoords().get(0).getGeoCodingObjects().get(0).getLat(), stop.getCoords().get(0).getGeoCodingObjects().get(0).getLon()));
                 stop.setOkato(getOkatoForObject(stop.getCoords().get(0).getGeoCodingObjects().get(0)));
                 stop.setType(stop.getCoords().get(0).getGeoCodingObjects().get(0).getType());
                 stop.setSourse("yandex");
+
+                log.info("Геокодируется остановочный пункт: " + stop.getName());
+
                 em.merge(stop);
             }
         }
@@ -116,50 +79,11 @@ public class GeoCodeUtils implements Serializable {
     }
 
     @Transactional
-    public void takeStopFromYandex(UnregisteredStop stop) {
-        ObjectMapper mapper = new ObjectMapper();
-        try{
-            log.info("Геокодируется остановочный пункт: " + stop.getName());
-            String regionCode = stop.getRegNum().trim().substring(0, 2);
-            Query q = em.createQuery("select r from Region r where r.code like :pattern");
-            q.setParameter("pattern", regionCode);
-            Region region = (Region) q.getSingleResult();
-            String replace = stop.getName().replace(" ", "+").replace("\"", "");
-            HttpGet request = new HttpGet("https://geocode-maps.yandex.ru/1.x/?format=json&apikey=74c882a5-c372-4385-bc86-bb09895d7669&geocode=".concat(replace));
-            HttpResponse response = new DefaultHttpClient().execute(request);
-            HttpEntity entity = response.getEntity();
-            String res = EntityUtils.toString(entity, "UTF-8");
-            StopCoordsYandex yandex = mapper.readValue(res, StopCoordsYandex.class);
-            GeoCodingResult result = new GeoCodingResult(yandex, replace);
-            log.info("Отправленный запрос: ".concat(replace));
-            if(region != null) {
-                result.getGeoCodingObjects().removeIf((a -> !a.getText().contains("Россия")));
-                result.getGeoCodingObjects().removeIf(a -> a.getComponents().stream().noneMatch(b -> b.getName().equals(region.getName())));
-                result.getGeoCodingObjects().removeIf((a -> a.getType().equals("hydro")));
-                result.getGeoCodingObjects().stream().forEach(a -> a.setSendedRequest(result.getSendedRequest()));
-                if(result.getGeoCodingObjects().size() > 0) {
-                    result.setCount((long) result.getGeoCodingObjects().size());
-                    em.persist(result);
-                    stop.getCoords().add(result);
-                    em.merge(stop);
-                    log.info("Результат геокодирования записан в базу");
-                }
-            }
-        }
-        catch (Exception ex) {
-
-        }
-    }
-
-    @Transactional
-    public GeoCodingResult geoCodeYandex(String query, String regionCode) {
+    public GeoCodingResult geoCodeYandex(String query) {
         log.info("Отправленный запрос: ".concat(query));
 
         try {
-            Query q = em.createQuery("select r from Region r where r.code like :pattern");
-            q.setParameter("pattern", "%".concat(regionCode).concat("%"));
-            Region region = (Region) q.setMaxResults(1).getSingleResult();
-            HttpGet request = new HttpGet("https://geocode-maps.yandex.ru/1.x/?format=json&apikey=74c882a5-c372-4385-bc86-bb09895d7669&geocode=".concat(query).concat("&rspn=1").concat("&").concat("bbox=").concat(region.getLowerCorner().concat("~").concat(region.getUpperCorner())));
+            HttpGet request = new HttpGet("https://geocode-maps.yandex.ru/1.x/?format=json&apikey=74c882a5-c372-4385-bc86-bb09895d7669&geocode=".concat(query).concat("&rspn=1"));
             HttpResponse response = new DefaultHttpClient().execute(request);
             HttpEntity entity = response.getEntity();
             String res = EntityUtils.toString(entity, "UTF-8");
@@ -172,17 +96,6 @@ public class GeoCodeUtils implements Serializable {
 
 
                 result.getGeoCodingObjects().removeIf((a -> !a.getText().contains("Россия")));
-
-                result.getGeoCodingObjects().removeIf(a -> {
-                    try {
-                        a.setAdress(ReverseGeoCodingResultYandex(a.getLat(), a.getLon()));
-                        return !(a.getAdress().contains(region.getName()));
-                    } catch (Exception ex) {
-                        log.info(ex.getMessage());
-                    }
-                        return false;
-                });
-
                 result.getGeoCodingObjects().removeIf((a -> a.getType().equals("hydro")));
                 result.getGeoCodingObjects().stream().forEach(a -> { a.setSendedRequest(result.getSendedRequest());});
                 if (result.getGeoCodingObjects().size() > 0) {
@@ -233,12 +146,7 @@ public class GeoCodeUtils implements Serializable {
 
             stop = renameStop(stop);
             log.info("Геокодируется остановочный пункт: " + stop.getName());
-            String regionCode = stop.getRegNum().trim().substring(0, 2);
-            Query q = em.createQuery("select r from Region r where r.code like :pattern");
-            q.setParameter("pattern", regionCode);
-            Region region = (Region) q.getSingleResult();
-            HttpGet request = new HttpGet("http://nominatim.openstreetmap.org/search.php?format=json&state=".concat(region.getName().replace(" ", "+")).concat("&q=").concat(replace));
-
+            HttpGet request = new HttpGet("http://nominatim.openstreetmap.org/search.php?format=json&state=".replace(" ", "+").concat("&q=").concat(replace));
             SSLContextBuilder builder = new SSLContextBuilder();
             builder.loadTrustMaterial(null, new TrustSelfSignedStrategy());
             SSLConnectionSocketFactory sslsf = new SSLConnectionSocketFactory(

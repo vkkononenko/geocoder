@@ -28,13 +28,6 @@ public class PointsJSON implements Serializable {
         .getGeoCodingObjects().forEach((GeoCodingObject object) -> features.add(new Features(object)));
     }
 
-    public PointsJSON(UnregisteredStop stop, Long resultId) {
-        type = "FeatureCollection";
-        features = new ArrayList<>();
-        stop.getCoords().stream().filter((GeoCodingResult result) -> result.getId().equals(resultId)).findFirst().get()
-                .getGeoCodingObjects().forEach((GeoCodingObject object) -> features.add(new Features(object)));
-    }
-
     public String getType() {
         return type;
     }

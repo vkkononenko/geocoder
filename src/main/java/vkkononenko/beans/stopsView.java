@@ -39,8 +39,6 @@ public class stopsView implements Serializable {
 
     private List<Stop> stopsList;
 
-    private List<UnregisteredStop> unregisteredStopList;
-
     private UploadedFile uploadedFile;
 
     private XSSFWorkbook workbook;

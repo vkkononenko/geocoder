@@ -11,14 +11,14 @@
       <IntrospectionStateNumber>75902</IntrospectionStateNumber>
       <Current>1</Current>
       <Visible>1</Visible>
-      <Relations>sequence|table|148544|148546|1
-sequence|table|148566|148568|1
-sequence|table|148580|148582|1
-sequence|table|148591|148593|1
-sequence|table|148492|148494|1
+      <Relations>sequence|table|148492|148494|1
 sequence|table|148503|148505|1
 sequence|table|148514|148516|1
 sequence|table|148533|148535|1
+sequence|table|148544|148546|1
+sequence|table|148566|148568|1
+sequence|table|148580|148582|1
+sequence|table|148591|148593|1
 </Relations>
     </database>
     <database id="3" parent="1" name="postgres">

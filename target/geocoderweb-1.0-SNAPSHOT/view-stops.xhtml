@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://java.sun.com/jsf/html"
+      xmlns:f="http://java.sun.com/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="http://java.sun.com/jsf/facelets">
+
+<h:head>
+    <title>Остановочные пункты</title>
+</h:head>
+<h:body>
+    <h:form id="mainForm">
+        <f:metadata>
+            <f:viewAction action="#{stopsView.onLoad()}" />
+        </f:metadata>
+        <p:fileUpload value="#{stopsView.uploadedFile}" mode="advanced" skinSimple="true" update="mainForm" fileUploadListener="#{stopsView.handleFileUpload}"/>
+
+        <p:dataTable id="stopDataTable" var="rec" value="#{stopsView.stopsList}" rows="5" scrollable="true" scrollWidth="1920"
+                     widgetVar="datatable"
+                     resizableColumns="true" style="margin-bottom:20px"
+                     paginator="true"
+                     paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                     paginatorPosition="top"
+                     rowsPerPageTemplate="5,10,15"
+                     rowKey="#{rec.id}">
+            <f:facet name="header">
+                Остановочные пункты
+            </f:facet>
+
+            <p:column headerText="Наименование остановочного пункта" resizable="true">
+                <h:outputText value="#{rec.name == null ? 'Нет данных' : rec.name}" />
+            </p:column>
+
+            <p:column headerText="Регистрационный номер остановочного пункта" resizable="true">
+                <h:outputText value="#{rec.regNum == null ? 'Нет данных' : rec.regNum}" />
+            </p:column>
+
+            <p:column headerText="Дата регистрации" resizable="true">
+                <h:outputText value="#{rec.regDate == null ? 'Нет данных' : rec.regDate}" />
+            </p:column>
+
+            <p:column headerText="Место нахождения" resizable="true">
+                <h:outputText value="#{rec.place == null ? 'Нет данных' : rec.place}" />
+            </p:column>
+
+            <p:column headerText="Наименование владельца" resizable="true">
+                <h:outputText value="#{rec.ownerName == null ? 'Нет данных' : rec.ownerName}" />
+            </p:column>
+
+            <p:column headerText="Пропускная способность, отправлений/час" resizable="true">
+                <h:outputText value="#{rec.capasity == null ? 'Нет данных' : rec.capasity}" />
+            </p:column>
+
+            <p:column headerText="Bремя перерывов технологического характера, мин" resizable="true">
+                <h:outputText value="#{rec.timeBreak == null ? 'Нет данных' : rec.timeBreak}" />
+            </p:column>
+
+            <p:column headerText="Путь подъезда транспортных средств к остановочному пункту" resizable="true">
+                <h:outputText value="#{rec.path == null ? 'Нет данных' : rec.path}" />
+            </p:column>
+
+            <p:column headerText="Широта" resizable="true">
+                <h:outputText value="#{rec.lat == null ? 'Нет данных' : rec.lat}" />
+            </p:column>
+
+            <p:column headerText="Долгота" resizable="true">
+                <h:outputText value="#{rec.lon == null ? 'Нет данных' : rec.lon}" />
+            </p:column>
+
+            <p:column headerText="Найдено топонимов" resizable="true">
+                <h:outputText value="#{rec.count == null ? 'Нет данных' : rec.count}" />
+            </p:column>
+
+            <p:column headerText="Максимальное расстояние между топонимами" resizable="true">
+                <h:outputText value="#{rec.maxDistance == null ? 'Нет данных' : rec.maxDistance}" />
+            </p:column>
+
+            <p:column headerText="Действия" resizable="true">
+                <p:commandButton value="Просмотр результатов геокодирования на яндекс карте" action="#{stopsView.setParamsForYandexMap(rec.getId())}" disabled="#{stopsView.disableMap(rec)}" oncomplete="PF('dlgMap').show();" update="mainForm:dlgMap"/>
+            </p:column>
+        </p:dataTable>
+
+        <p:commandButton value="Геокодировать" action="#{stopsView.geocoding}"/>
+        <br/>
+        <p:commandButton value="Вычислить ОКАТО" action="#{stopsView.getOkato}"/>
+        <br/>
+        <p:inputText value="#{stopsView.stopId}"/>
+        <p:commandButton value="Геокодировать по ID" action="#{stopsView.geocodeById}"/>
+        <br/>
+        <p:commandButton value="Удалить результаты геокодирования" action="#{stopsView.deleteResults}"/>
+
+
+        <p:dialog id="dlgMap" header="Просмотр результатов геокодирования" widgetVar="dlgMap" style="height: auto; width: auto">
+            <div id="yandexMap" style="width: 800px; height: 600px">
+                <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU&amp;apikey=74c882a5-c372-4385-bc86-bb09895d7669"></script>
+                <script type="text/javascript">
+                    var lat = "56.012481";
+                    var lon = "37.839232";
+                    var zoom = "10";
+                    ymaps.ready()
+                        .done(function (ym) {
+                            var myMap = new ym.Map('yandexMap', {
+                                center: [lat, lon],
+                                zoom: zoom
+                            }, {
+                                searchControlProvider: 'yandex#search'
+                            });
+
+                            jQuery.getJSON('http://localhost:8080/geocoderweb/rest/getGeoJsonForStop?stopId=#{stopsView.stopId}&amp;registered=1', function (json) {
+                                var geoObjects = ym.geoQuery(json)
+                                    .addToMap(myMap)
+                                    .applyBoundsToMap(myMap, {
+                                        checkZoomRange: true
+                                    });
+                            });
+                        });
+                </script>
+            </div>
+        </p:dialog>
+    </h:form>
+    </h:body>
+</ui:composition>
+</html>
